@@ -1,0 +1,410 @@
+Index: springboot-backend/src/main/java/com/balwinderjava/springboot/service/EmployeeService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/springboot-backend/src/main/java/com/balwinderjava/springboot/service/EmployeeService.java b/springboot-backend/src/main/java/com/balwinderjava/springboot/service/EmployeeService.java
+new file mode 100644
+--- /dev/null	(date 1749833690565)
++++ b/springboot-backend/src/main/java/com/balwinderjava/springboot/service/EmployeeService.java	(date 1749833690565)
+@@ -0,0 +1,16 @@
++package com.balwinderjava.springboot.service;
++
++import com.balwinderjava.springboot.model.Employee;
++
++import java.util.List;
++import java.util.Optional;
++
++public interface EmployeeService {
++    List<Employee> findAll();
++
++    Employee save(Employee employee);
++
++    Optional<Employee> findById(Long id);
++
++    void delete(Employee employee);
++}
+Index: springboot-backend/src/test/java/com/balwinderjava/springboot/EmployeeServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/springboot-backend/src/test/java/com/balwinderjava/springboot/EmployeeServiceTest.java b/springboot-backend/src/test/java/com/balwinderjava/springboot/EmployeeServiceTest.java
+new file mode 100644
+--- /dev/null	(date 1749836386402)
++++ b/springboot-backend/src/test/java/com/balwinderjava/springboot/EmployeeServiceTest.java	(date 1749836386402)
+@@ -0,0 +1,62 @@
++package com.balwinderjava.springboot;
++
++import com.balwinderjava.springboot.model.Employee;
++import com.balwinderjava.springboot.repository.EmployeeRepository;
++import com.balwinderjava.springboot.service.impl.EmployeeServiceImpl;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.ExtendWith;
++import org.mockito.InjectMocks;
++import org.mockito.Mock;
++import org.mockito.junit.jupiter.MockitoExtension;
++
++import java.util.Arrays;
++import java.util.Optional;
++
++import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.Mockito.*;
++
++@ExtendWith(MockitoExtension.class)
++class EmployeeServiceTest {
++
++    @Mock
++    private EmployeeRepository employeeRepository;
++
++    @InjectMocks
++    private EmployeeServiceImpl employeeService;
++
++    private Employee employee;
++
++    @BeforeEach
++    void setUp() {
++        employee = new Employee(1L, "John", "Doe", "john.doe@example.com");
++    }
++
++    @Test
++    void shouldReturnAllEmployees() {
++        when(employeeRepository.findAll()).thenReturn(Arrays.asList(employee));
++        assertEquals(1, employeeService.findAll().size());
++    }
++
++    @Test
++    void shouldReturnEmployeeById() {
++        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
++        Optional<Employee> result = employeeService.findById(1L);
++        assertTrue(result.isPresent());
++        assertEquals("John", result.get().getFirstName());
++    }
++
++    @Test
++    void shouldSaveEmployee() {
++        when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
++        Employee result = employeeService.save(employee);
++        assertEquals("john.doe@example.com", result.getEmailId());
++    }
++
++    @Test
++    void shouldDeleteEmployee() {
++        doNothing().when(employeeRepository).delete(employee);
++        assertDoesNotThrow(() -> employeeService.delete(employee));
++        verify(employeeRepository, times(1)).delete(employee);
++    }
++}
+\ No newline at end of file
+Index: springboot-backend/src/main/java/com/balwinderjava/springboot/service/impl/EmployeeServiceImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/springboot-backend/src/main/java/com/balwinderjava/springboot/service/impl/EmployeeServiceImpl.java b/springboot-backend/src/main/java/com/balwinderjava/springboot/service/impl/EmployeeServiceImpl.java
+new file mode 100644
+--- /dev/null	(date 1749833789321)
++++ b/springboot-backend/src/main/java/com/balwinderjava/springboot/service/impl/EmployeeServiceImpl.java	(date 1749833789321)
+@@ -0,0 +1,35 @@
++package com.balwinderjava.springboot.service.impl;
++
++import com.balwinderjava.springboot.model.Employee;
++import com.balwinderjava.springboot.repository.EmployeeRepository;
++import com.balwinderjava.springboot.service.EmployeeService;
++import lombok.RequiredArgsConstructor;
++import org.springframework.stereotype.Service;
++
++import java.util.List;
++import java.util.Optional;
++
++@Service
++@RequiredArgsConstructor
++public class EmployeeServiceImpl implements EmployeeService {
++    private final EmployeeRepository employeeRepository;
++    @Override
++    public List<Employee> findAll() {
++        return employeeRepository.findAll();
++    }
++
++    @Override
++    public Employee save(Employee employee) {
++        return employeeRepository.save(employee);
++    }
++
++    @Override
++    public Optional<Employee> findById(Long id) {
++        return employeeRepository.findById(id);
++    }
++
++    @Override
++    public void delete(Employee employee) {
++        employeeRepository.delete(employee);
++    }
++}
+Index: springboot-backend/src/main/java/com/balwinderjava/springboot/model/Employee.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/springboot-backend/src/main/java/com/balwinderjava/springboot/model/Employee.java b/springboot-backend/src/main/java/com/balwinderjava/springboot/model/Employee.java
+new file mode 100644
+--- /dev/null	(date 1749831331965)
++++ b/springboot-backend/src/main/java/com/balwinderjava/springboot/model/Employee.java	(date 1749831331965)
+@@ -0,0 +1,26 @@
++package com.balwinderjava.springboot.model;
++
++import jakarta.persistence.*;
++import lombok.*;
++
++@Entity
++@Table(name = "employees")
++@AllArgsConstructor
++@NoArgsConstructor
++@Getter
++@Setter
++public class Employee {
++
++	@Id
++	@GeneratedValue(strategy = GenerationType.IDENTITY)
++	private long id;
++
++	@Column(name = "first_name")
++	private String firstName;
++
++	@Column(name = "last_name")
++	private String lastName;
++
++	@Column(name = "email_id")
++	private String emailId;
++}
+Index: springboot-backend/src/main/java/com/balwinderjava/springboot/controller/EmployeeController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/springboot-backend/src/main/java/com/balwinderjava/springboot/controller/EmployeeController.java b/springboot-backend/src/main/java/com/balwinderjava/springboot/controller/EmployeeController.java
+new file mode 100644
+--- /dev/null	(date 1749833690552)
++++ b/springboot-backend/src/main/java/com/balwinderjava/springboot/controller/EmployeeController.java	(date 1749833690552)
+@@ -0,0 +1,91 @@
++package com.balwinderjava.springboot.controller;
++import com.balwinderjava.springboot.exception.ShouldNotHappenException;
++import com.balwinderjava.springboot.repository.EmployeeRepository;
++import com.balwinderjava.springboot.service.EmployeeService;
++import lombok.RequiredArgsConstructor;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.http.ResponseEntity;
++import org.springframework.web.bind.annotation.CrossOrigin;
++import org.springframework.web.bind.annotation.DeleteMapping;
++import org.springframework.web.bind.annotation.GetMapping;
++import org.springframework.web.bind.annotation.PathVariable;
++import org.springframework.web.bind.annotation.PostMapping;
++import org.springframework.web.bind.annotation.PutMapping;
++import org.springframework.web.bind.annotation.RequestBody;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RestController;
++
++import com.balwinderjava.springboot.model.Employee;
++
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++/**
++ * REST controller for managing employee records.
++ */
++@CrossOrigin(origins = "http://localhost:3000")
++@RestController
++@RequestMapping("/api/v1/")
++@RequiredArgsConstructor
++public class EmployeeController {
++
++	private final EmployeeService employeeService;
++
++	/**
++	 * Retrieve all employee records.
++	 */
++	@GetMapping("/employees")
++	public List<Employee> getAllEmployees(){
++		return employeeService.findAll();
++	}
++
++	/**
++	 * Create new employee.
++	 */
++	@PostMapping("/employees")
++	public Employee createEmployee(@RequestBody Employee employee) {
++		return employeeService.save(employee);
++	}
++
++	/**
++	 * Get employee details by Id
++	 */
++	@GetMapping("/employees/{id}")
++	public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
++		Employee employee = employeeService.findById(id)
++				.orElseThrow(() -> new ShouldNotHappenException("Employee not exist with id :" + id));
++		return ResponseEntity.ok(employee);
++	}
++
++	/**
++	 * Update employee record by Ie.
++	 */
++	@PutMapping("/employees/{id}")
++	public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee employeeDetails){
++		Employee employee = employeeService.findById(id)
++				.orElseThrow(() -> new ShouldNotHappenException("Employee not exist with id :" + id));
++		
++		employee.setFirstName(employeeDetails.getFirstName());
++		employee.setLastName(employeeDetails.getLastName());
++		employee.setEmailId(employeeDetails.getEmailId());
++		
++		Employee updatedEmployee = employeeService.save(employee);
++		return ResponseEntity.ok(updatedEmployee);
++	}
++
++	/**
++	 * Delete employee record by ID.
++	 */
++	@DeleteMapping("/employees/{id}")
++	public ResponseEntity<Map<String, Boolean>> deleteEmployee(@PathVariable Long id){
++		Employee employee = employeeService.findById(id)
++				.orElseThrow(() -> new ShouldNotHappenException("Employee not exist with id :" + id));
++		
++		employeeService.delete(employee);
++		Map<String, Boolean> response = new HashMap<>();
++		response.put("deleted", Boolean.TRUE);
++		return ResponseEntity.ok(response);
++	}
++	
++	
++}
+Index: springboot-backend/src/main/java/com/balwinderjava/springboot/repository/EmployeeRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/springboot-backend/src/main/java/com/balwinderjava/springboot/repository/EmployeeRepository.java b/springboot-backend/src/main/java/com/balwinderjava/springboot/repository/EmployeeRepository.java
+new file mode 100644
+--- /dev/null	(date 1749698245217)
++++ b/springboot-backend/src/main/java/com/balwinderjava/springboot/repository/EmployeeRepository.java	(date 1749698245217)
+@@ -0,0 +1,11 @@
++package com.balwinderjava.springboot.repository;
++
++import org.springframework.data.jpa.repository.JpaRepository;
++import org.springframework.stereotype.Repository;
++
++import com.balwinderjava.springboot.model.Employee;
++
++@Repository
++public interface EmployeeRepository extends JpaRepository<Employee, Long>{
++
++}
+Index: springboot-backend/src/test/java/com/balwinderjava/springboot/EmployeeControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/springboot-backend/src/test/java/com/balwinderjava/springboot/EmployeeControllerTest.java b/springboot-backend/src/test/java/com/balwinderjava/springboot/EmployeeControllerTest.java
+new file mode 100644
+--- /dev/null	(date 1749834072047)
++++ b/springboot-backend/src/test/java/com/balwinderjava/springboot/EmployeeControllerTest.java	(date 1749834072047)
+@@ -0,0 +1,97 @@
++package com.balwinderjava.springboot;
++
++import com.balwinderjava.springboot.controller.EmployeeController;
++import com.balwinderjava.springboot.model.Employee;
++import com.balwinderjava.springboot.service.EmployeeService;
++import com.fasterxml.jackson.databind.ObjectMapper;
++
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.ExtendWith;
++
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
++import org.springframework.boot.test.mock.mockito.MockBean;
++
++import org.springframework.http.MediaType;
++import org.springframework.test.context.junit.jupiter.SpringExtension;
++import org.springframework.test.web.servlet.MockMvc;
++
++import java.util.Optional;
++import java.util.Arrays;
++
++import static org.mockito.Mockito.*;
++import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
++
++@ExtendWith(SpringExtension.class)
++@WebMvcTest(EmployeeController.class)
++class EmployeeControllerTest {
++
++    @Autowired
++    private MockMvc mockMvc;
++
++    @MockBean
++    private EmployeeService employeeService;
++
++    @Autowired
++    private ObjectMapper objectMapper;
++
++    private Employee employee;
++
++    @BeforeEach
++    void setUp() {
++        employee = new Employee(1L, "John", "Doe", "john.doe@example.com");
++    }
++
++    @Test
++    void shouldGetAllEmployees() throws Exception {
++        when(employeeService.findAll()).thenReturn(Arrays.asList(employee));
++
++        mockMvc.perform(get("/api/v1/employees"))
++                .andExpect(status().isOk())
++                .andExpect(jsonPath("$[0].firstName").value("John"));
++    }
++
++    @Test
++    void shouldGetEmployeeById() throws Exception {
++        when(employeeService.findById(1L)).thenReturn(Optional.of(employee));
++
++        mockMvc.perform(get("/api/v1/employees/1"))
++                .andExpect(status().isOk())
++                .andExpect(jsonPath("$.lastName").value("Doe"));
++    }
++
++    @Test
++    void shouldCreateEmployee() throws Exception {
++        when(employeeService.save(any(Employee.class))).thenReturn(employee);
++
++        mockMvc.perform(post("/api/v1/employees")
++                .contentType(MediaType.APPLICATION_JSON)
++                .content(objectMapper.writeValueAsString(employee)))
++                .andExpect(status().isOk())
++                .andExpect(jsonPath("$.emailId").value("john.doe@example.com"));
++    }
++
++    @Test
++    void shouldUpdateEmployee() throws Exception {
++        when(employeeService.findById(1L)).thenReturn(Optional.of(employee));
++        when(employeeService.save(any(Employee.class))).thenReturn(employee);
++
++        mockMvc.perform(put("/api/v1/employees/1")
++                .contentType(MediaType.APPLICATION_JSON)
++                .content(objectMapper.writeValueAsString(employee)))
++                .andExpect(status().isOk())
++                .andExpect(jsonPath("$.firstName").value("John"));
++    }
++
++    @Test
++    void shouldDeleteEmployee() throws Exception {
++        when(employeeService.findById(1L)).thenReturn(Optional.of(employee));
++        doNothing().when(employeeService).delete(employee);
++
++        mockMvc.perform(delete("/api/v1/employees/1"))
++                .andExpect(status().isOk())
++                .andExpect(jsonPath("$.deleted").value(true));
++    }
++}
+\ No newline at end of file
