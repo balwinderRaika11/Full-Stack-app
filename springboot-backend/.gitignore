@@ -14,7 +14,6 @@ target/
 .sts4-cache
 
 # IntelliJ IDEA files and folders
-.idea/
 *.iml
 *.iws
 *.ipr
